@@ -75,7 +75,9 @@ class MainActivity : AppCompatActivity() {
 				try {
 					while (!isInterrupted) {
 						selected.color = lstColor
-						newList = ArrayList(panel.transports.filter { it.color == Color.GREEN })
+						//synchronized(panel.transports) {
+							newList = ArrayList(panel.transports.filter { it.color == Color.GREEN })
+						//}
 						selected = newList.minBy { it.location.distanceSquared(this@MainActivity.state.target) }!!
 						lstColor = selected.color
 						selected.color = Color.RED
@@ -92,8 +94,10 @@ class MainActivity : AppCompatActivity() {
 			override fun run() {
 				try {
 					Thread.sleep(5000)
-					for (i in panel.transports) {
-						i.touchable = true
+					synchronized(panel.transports) {
+						for (i in panel.transports) {
+							i.touchable = true
+						}
 					}
 				} catch (e: InterruptedException) {
 					return

@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.view.MotionEvent
 import android.view.View
+import android.widget.Toast
 import com.example.sunyiding.aitryandroidversion.MainActivity
 import com.jme3.math.Vector2f
 
@@ -84,44 +85,48 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 			canvas.drawRect(2400 + axis.x, -800 + axis.y - 50, axis.x + 2450, axis.y - 800 - 50 + 2500, paint)
 			paint.color = Color.BLACK
 			lstUpdate = time
-			for (transport in transports) {
-				if (start)
-					transport.update(tpf)
-				transport.draw(canvas, axis)
-				if (transport.location.x < -1200 || transport.location.x > 2400 || transport.location.y < -800 || transport.location.y > 1600) {
-					transport.dead = true
-					if (transport.explode) {
-						explosion(this)
-						touchWall++
-					}
-				}
-				for (obstacle in list) {
-					if (transport.location.distance(obstacle.location) < 2f + obstacle.radius) {
+			synchronized(transports) {
+				for (transport in transports) {
+					if (start)
+						transport.update(tpf)
+					transport.draw(canvas, axis)
+					if (transport.location.x < -1200 || transport.location.x > 2400 || transport.location.y < -800 || transport.location.y > 1600) {
 						transport.dead = true
 						if (transport.explode) {
 							explosion(this)
-							touchObstacle++
+							touchWall++
+						}
+					}
+					for (obstacle in list) {
+						if (transport.location.distance(obstacle.location) < 2f + obstacle.radius) {
+							transport.dead = true
+							if (transport.explode) {
+								explosion(this)
+								touchObstacle++
+							}
 						}
 					}
 				}
 			}
-			for (i in 0 until transports.size) {
-				if (transports[i].touchable)
-					for (j in i + 1 until transports.size) {
-						if (transports[j].touchable)
-							if (transports[i].location.distanceSquared(transports[j].location) < 50f) {
-								transports[i].dead = true
-								transports[j].dead = true
-								if (transports[i].explode || transports[j].explode) {
-									explosion(this)
+			synchronized(transports) {
+				for (i in 0 until transports.size) {
+					if (transports[i].touchable)
+						for (j in i + 1 until transports.size) {
+							if (transports[j].touchable)
+								if (transports[i].location.distanceSquared(transports[j].location) < 50f) {
+									transports[i].dead = true
+									transports[j].dead = true
+									if (transports[i].explode || transports[j].explode) {
+										explosion(this)
+									}
+									if (transports[i].explode && transports[j].explode) {
+										touchEach++
+									} else {
+										bulletHit++
+									}
 								}
-								if (transports[i].explode && transports[j].explode) {
-									touchEach++
-								} else {
-									bulletHit++
-								}
-							}
-					}
+						}
+				}
 			}
 			var i = 0
 			while (i < transports.size) {
@@ -148,36 +153,105 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 	
 	var lstL = Vector2f(0f, 0f)
 	var lstR = Vector2f(0f, 0f)
+	var cd = false
+	var isGun = true
 	override fun onTouchEvent(event: MotionEvent?): Boolean {
-		when (event!!.action) {
+		when (event!!.actionMasked) {
 			MotionEvent.ACTION_DOWN -> {
-				if (event.x > width / 2)
-					lstR = Vector2f(event.x, event.y).add(axis.negate())
-				else
-					lstL = Vector2f(event.x, event.y).add(axis.negate())
-				return true
+				for (j in 0 until event.pointerCount) {
+					when {
+						event.getX(j) > width / 2 -> lstR = Vector2f(event.getX(j), event.getY(j)).add(axis.negate())
+						event.getX(j) <= width / 2 -> lstL = Vector2f(event.getX(j), event.getY(j)).add(axis.negate())
+					}
+				}
+			}
+			MotionEvent.ACTION_POINTER_DOWN -> {
+				for (j in 0 until event.pointerCount) {
+					when {
+						event.getX(j) > width / 2 -> lstR = Vector2f(event.getX(j), event.getY(j)).add(axis.negate())
+						event.getX(j) <= width / 2 -> lstL = Vector2f(event.getX(j), event.getY(j)).add(axis.negate())
+					}
+				}
+				if (event.pointerCount == 3) {
+					isGun = !isGun
+					Toast.makeText(activity, "Weapon changed, now:" + if (isGun) "Gun" else "missile", Toast.LENGTH_SHORT).show()
+				}
 			}
 			MotionEvent.ACTION_MOVE -> {
-				if (event.x > width / 2) {
-					for (i in 0 until event.historySize) {
-						val new = Vector2f(event.getHistoricalX(i), event.getHistoricalY(i)).add(axis.negate())
-						val move = lstR.add(new.negate())
-						axis.addLocal(move.negate())
-						lstR = new
+				if (event.pointerCount <= 2)
+					for (j in 0 until event.pointerCount) {
+						if (event.getX(j) > width / 2) {
+							for (i in 0 until event.historySize) {
+								val new = Vector2f(event.getHistoricalX(j, i), event.getHistoricalY(j, i)).add(axis.negate())
+								val move = lstR.add(new.negate())
+								axis.addLocal(move.negate())
+								lstR = new
+							}
+						} else {
+							for (i in 0 until event.historySize) {
+								val new = Vector2f(event.getHistoricalX(j, i), event.getHistoricalY(j, i)).add(axis.negate())
+								val move = lstL.add(new.negate())
+								activity.state.target.addLocal(move.negate())
+								lstL = new
+							}
+						}
 					}
-					return true
+			}
+		}
+		if (event.pointerCount == 2) {
+			if (!cd) {
+				if (isGun) {
+					val bullet = object : Transport(1f, Vector2f(activity.transport.location), maxVelocity = 10000f, maxAcceleration = 0f, color = Color.BLACK, size = 2f, explode = false) {
+						override fun draw(canvas: Canvas, axis: Vector2f) {
+							val p1 = location.add(velocity.normalize().mult(size)).add(axis)
+							val p2 = location.add(velocity.normalize().mult(size).negate()).add(axis)
+							val paint = Paint()
+							paint.color = color
+							drawLine(p1, p2, canvas, paint)
+						}
+					}
+					bullet.velocity = activity.transport.velocity.add(activity.transport.velocity.normalize().mult(400f))
+					transports.add(bullet)
+					val thread = object : Thread() {
+						override fun run() {
+							cd = true
+							Thread.sleep(250)
+							bullet.touchable = true
+							cd = false
+							Thread.sleep(4750)
+							bullet.dead = true
+						}
+					}
+					thread.start()
 				} else {
-					for (i in 0 until event.historySize) {
-						val new = Vector2f(event.getHistoricalX(i), event.getHistoricalY(i)).add(axis.negate())
-						val move = lstL.add(new.negate())
-						activity.state.target.addLocal(move.negate())
-						lstL = new
+					val bullet = Transport(1f, Vector2f(activity.transport.location), maxVelocity = 200f, maxAcceleration = 300f, color = Color.BLUE, size = 3f, explode = false)
+					bullet.touchable = false
+					bullet.velocity = Vector2f(activity.transport.velocity)
+					bullet.states.add(ObstacleAvoidState(bullet, list))
+					bullet.states.add(PursuitState(bullet, activity.selected))
+					bullet.states.add(object : State(bullet) {
+						override fun update(): Vector2f {
+							bullet.maxAcceleration = Math.max(bullet.maxAcceleration - 2f, 20f)
+							return Vector2f(0f, 0f)
+						}
+					})
+					activity.selected.states.add(EvadeState(activity.selected, bullet))
+					transports.add(bullet)
+					val thread = object : Thread() {
+						override fun run() {
+							cd = true
+							Thread.sleep(500)
+							bullet.touchable = true
+							Thread.sleep(500)
+							cd = false
+							Thread.sleep(9000)
+							bullet.dead = true
+						}
 					}
-					return true
+					thread.start()
 				}
 			}
 		}
 		return true
 	}
-	
 }
