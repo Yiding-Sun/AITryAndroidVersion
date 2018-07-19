@@ -14,10 +14,13 @@ import AlignmentState
 import CohesionState
 import EvadeState
 import WanderState
+import android.content.DialogInterface
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.support.constraint.ConstraintLayout
+import android.support.v7.app.AlertDialog
 import android.view.MotionEvent
+import android.view.View
 import android.view.Window
 import android.view.WindowManager
 import android.widget.LinearLayout
@@ -34,6 +37,7 @@ class MainActivity : AppCompatActivity() {
 	lateinit var battleStart: Thread
 	lateinit var print: Thread
 	var lstColor = Color.BLACK
+	var shown = false
 	override fun onDestroy() {
 		super.onDestroy()
 		thread.interrupt()
@@ -75,16 +79,36 @@ class MainActivity : AppCompatActivity() {
 				try {
 					while (!isInterrupted) {
 						selected.color = lstColor
-						//synchronized(panel.transports) {
-							newList = ArrayList(panel.transports.filter { it.color == Color.GREEN })
-						//}
-						selected = newList.minBy { it.location.distanceSquared(this@MainActivity.state.target) }!!
-						lstColor = selected.color
-						selected.color = Color.RED
-						panel.invalidate()
-						Thread.sleep(20)
+						synchronized(panel.transports) {
+							newList=ArrayList()
+							var i=0
+							while(i<panel.transports.size){
+								if(panel.transports[i].color==Color.GREEN){
+									newList.add(panel.transports[i])
+								}
+								i++
+							}
+						}
+						if (newList.size == 0) {
+							if (!shown) {
+								AlertDialog.Builder(this@MainActivity).setTitle("Game Finished").setMessage("""
+								You've killed all the enemy planes
+								${panel.touchWall} of them hit the wall
+								${panel.touchObstacle} of them hit the wall
+								${panel.touchEach} of them hit each other and die
+								You only hit ${panel.bulletHit} of them
+							""").setPositiveButton(R.string.exit) { p0, p1 -> System.exit(0) }.show()
+								shown=true
+							}
+						} else {
+							selected = newList.minBy { it.location.distanceSquared(this@MainActivity.state.target) }!!
+							lstColor = selected.color
+							selected.color = Color.RED
+							panel.invalidate()
+							Thread.sleep(20)
+						}
 					}
-				}catch (e:InterruptedException){
+				} catch (e: InterruptedException) {
 					return
 				}
 			}
