@@ -121,7 +121,7 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 									}
 									if (transports[i].explode && transports[j].explode) {
 										touchEach++
-									} else {
+									} else if (transports[i].explode || transports[j].explode) {
 										bulletHit++
 									}
 								}
@@ -154,7 +154,14 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 	var lstL = Vector2f(0f, 0f)
 	var lstR = Vector2f(0f, 0f)
 	var cd = false
-	var isGun = true
+	
+	enum class Weapon(val value: Int) {
+		GUN(0), MISSILE(1), RADIUS(2), SUPER_GUN(3);
+		
+		fun next(): Weapon = values()[ordinal + 1]
+	}
+	
+	var weapon = Weapon.GUN
 	override fun onTouchEvent(event: MotionEvent?): Boolean {
 		when (event!!.actionMasked) {
 			MotionEvent.ACTION_DOWN -> {
@@ -173,8 +180,8 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 					}
 				}
 				if (event.pointerCount == 3) {
-					isGun = !isGun
-					Toast.makeText(activity, "Weapon changed, now:" + if (isGun) "Gun" else "missile", Toast.LENGTH_SHORT).show()
+					weapon = weapon.next()
+					Toast.makeText(activity, "Weapon changed, now:$weapon", Toast.LENGTH_SHORT).show()
 				}
 			}
 			MotionEvent.ACTION_MOVE -> {
@@ -200,58 +207,82 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 		}
 		if (event.pointerCount == 2) {
 			if (!cd) {
-				if (isGun) {
-					val bullet = object : Transport(1f, Vector2f(activity.transport.location), maxVelocity = 10000f, maxAcceleration = 0f, color = Color.BLACK, size = 2f, explode = false) {
-						override fun draw(canvas: Canvas, axis: Vector2f) {
-							val p1 = location.add(velocity.normalize().mult(size)).add(axis)
-							val p2 = location.add(velocity.normalize().mult(size).negate()).add(axis)
-							val paint = Paint()
-							paint.color = color
-							drawLine(p1, p2, canvas, paint)
+				when (weapon) {
+					Weapon.GUN -> {
+						val bullet = GunBullet(activity)
+						bullet.velocity = activity.transport.velocity.add(activity.transport.velocity.normalize().mult(400f))
+						transports.add(bullet)
+						val thread = object : Thread() {
+							override fun run() {
+								cd = true
+								Thread.sleep(250)
+								bullet.touchable = true
+								cd = false
+								Thread.sleep(4750)
+								bullet.dead = true
+							}
 						}
+						thread.start()
 					}
-					bullet.velocity = activity.transport.velocity.add(activity.transport.velocity.normalize().mult(400f))
-					transports.add(bullet)
-					val thread = object : Thread() {
-						override fun run() {
-							cd = true
-							Thread.sleep(250)
-							bullet.touchable = true
-							cd = false
-							Thread.sleep(4750)
-							bullet.dead = true
+					
+					Weapon.MISSILE -> {
+						val bullet = Transport(1f, Vector2f(activity.transport.location), maxVelocity = 200f, maxAcceleration = 300f, color = Color.BLUE, size = 3f, explode = false)
+						bullet.touchable = false
+						bullet.velocity = Vector2f(activity.transport.velocity)
+						bullet.states.add(ObstacleAvoidState(bullet, list))
+						bullet.states.add(PursuitState(bullet, activity.selected))
+						bullet.states.add(object : State(bullet) {
+							override fun update(): Vector2f {
+								bullet.maxAcceleration = Math.max(bullet.maxAcceleration - 2f, 20f)
+								return Vector2f(0f, 0f)
+							}
+						})
+						activity.selected.states.add(EvadeState(activity.selected, bullet))
+						transports.add(bullet)
+						val thread = object : Thread() {
+							override fun run() {
+								cd = true
+								Thread.sleep(500)
+								bullet.touchable = true
+								Thread.sleep(500)
+								cd = false
+								Thread.sleep(9000)
+								bullet.dead = true
+							}
 						}
+						thread.start()
 					}
-					thread.start()
-				} else {
-					val bullet = Transport(1f, Vector2f(activity.transport.location), maxVelocity = 200f, maxAcceleration = 300f, color = Color.BLUE, size = 3f, explode = false)
-					bullet.touchable = false
-					bullet.velocity = Vector2f(activity.transport.velocity)
-					bullet.states.add(ObstacleAvoidState(bullet, list))
-					bullet.states.add(PursuitState(bullet, activity.selected))
-					bullet.states.add(object : State(bullet) {
-						override fun update(): Vector2f {
-							bullet.maxAcceleration = Math.max(bullet.maxAcceleration - 2f, 20f)
-							return Vector2f(0f, 0f)
+					Weapon.RADIUS -> {
+						val bullet = GunBullet(activity)
+						bullet.velocity = activity.transport.velocity.add(activity.transport.velocity.normalize().mult(2000f))
+						transports.add(bullet)
+						val thread = object : Thread() {
+							override fun run() {
+								cd = true
+								Thread.sleep(10)
+								bullet.touchable = true
+								Thread.sleep(30)
+								cd = false
+								Thread.sleep(210)
+								bullet.dead = true
+							}
 						}
-					})
-					activity.selected.states.add(EvadeState(activity.selected, bullet))
-					transports.add(bullet)
-					val thread = object : Thread() {
-						override fun run() {
-							cd = true
-							Thread.sleep(500)
-							bullet.touchable = true
-							Thread.sleep(500)
-							cd = false
-							Thread.sleep(9000)
-							bullet.dead = true
-						}
+						thread.start()
 					}
-					thread.start()
 				}
+				
 			}
 		}
 		return true
+	}
+}
+
+class GunBullet(activity: MainActivity) : Transport(1f, Vector2f(activity.transport.location), maxVelocity = 10000f, maxAcceleration = 0f, color = Color.BLACK, size = 2f, explode = false) {
+	override fun draw(canvas: Canvas, axis: Vector2f) {
+		val p1 = location.add(velocity.normalize().mult(size)).add(axis)
+		val p2 = location.add(velocity.normalize().mult(size).negate()).add(axis)
+		val paint = Paint()
+		paint.color = color
+		drawLine(p1, p2, canvas, paint)
 	}
 }
