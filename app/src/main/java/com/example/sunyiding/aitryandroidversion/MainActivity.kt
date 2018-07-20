@@ -80,25 +80,29 @@ class MainActivity : AppCompatActivity() {
 					while (!isInterrupted) {
 						selected.color = lstColor
 						synchronized(panel.transports) {
-							newList=ArrayList()
-							var i=0
-							while(i<panel.transports.size){
-								if(panel.transports[i].color==Color.GREEN){
-									newList.add(panel.transports[i])
+							newList = ArrayList()
+							var i = 0
+							while (i < panel.transports.size) {
+								synchronized(panel.transports[i]) {
+									if (panel.transports[i].color == Color.GREEN) {
+										newList.add(panel.transports[i])
+									}
 								}
 								i++
 							}
 						}
-						if (newList.size == 0) {
+						if (newList.isEmpty()) {
 							if (!shown) {
-								AlertDialog.Builder(this@MainActivity).setTitle("Game Finished").setMessage("""
-								You've killed all the enemy planes
-								${panel.touchWall} of them hit the wall
-								${panel.touchObstacle} of them hit the wall
-								${panel.touchEach} of them hit each other and die
-								You only hit ${panel.bulletHit} of them
-							""").setPositiveButton(R.string.exit) { p0, p1 -> System.exit(0) }.show()
-								shown=true
+								runOnUiThread {
+									AlertDialog.Builder(this@MainActivity, R.style.MyAlertDialogStyle).setTitle("Game Finished").setMessage("""
+You've killed all the enemy planes
+${panel.touchWall} of them hit the wall
+${panel.touchObstacle} of them hit the wall
+${panel.touchEach} of them hit each other and die
+You only hit ${panel.bulletHit} of them
+""").setPositiveButton(R.string.exit) { p0, p1 -> System.exit(0) }.create().show()
+								}
+								shown = true
 							}
 						} else {
 							selected = newList.minBy { it.location.distanceSquared(this@MainActivity.state.target) }!!
@@ -114,40 +118,42 @@ class MainActivity : AppCompatActivity() {
 			}
 		}
 		thread.start()
-		battleStart = object : Thread() {
-			override fun run() {
-				try {
-					Thread.sleep(5000)
-					synchronized(panel.transports) {
-						for (i in panel.transports) {
-							i.touchable = true
+		battleStart =
+				object : Thread() {
+					override fun run() {
+						try {
+							Thread.sleep(5000)
+							synchronized(panel.transports) {
+								for (i in panel.transports) {
+									i.touchable = true
+								}
+							}
+						} catch (e: InterruptedException) {
+							return
 						}
 					}
-				} catch (e: InterruptedException) {
-					return
 				}
-			}
-		}
 		battleStart.start()
-		print = object : Thread() {
-			override fun run() {
-				try {
-					while (!isInterrupted) {
-						Thread.sleep(5000)
-						synchronized(System.out) {
-							println("panel = ${panel}")
-							println("touchWall = ${panel.touchWall}")
-							println("touchEach = ${panel.touchEach}")
-							println("touchObstacle = ${panel.touchObstacle}")
-							println("bulletHit = ${panel.bulletHit}")
-							println("----------------------------------")
+		print =
+				object : Thread() {
+					override fun run() {
+						try {
+							while (!isInterrupted) {
+								Thread.sleep(5000)
+								synchronized(System.out) {
+									println("panel = ${panel}")
+									println("touchWall = ${panel.touchWall}")
+									println("touchEach = ${panel.touchEach}")
+									println("touchObstacle = ${panel.touchObstacle}")
+									println("bulletHit = ${panel.bulletHit}")
+									println("----------------------------------")
+								}
+							}
+						} catch (e: InterruptedException) {
+							return
 						}
 					}
-				} catch (e: InterruptedException) {
-					return
 				}
-			}
-		}
 		print.start()
 		
 	}
