@@ -29,13 +29,13 @@ open class Transport(
 			when (state) {
 				is AlignmentState -> secondLevelForce.addLocal(simpleForce)
 				is ArriveState -> secondLevelForce.addLocal(simpleForce.mult(150f))
-				is CohesionState -> secondLevelForce.addLocal(simpleForce.mult(150f))
-				is EvadeState -> secondLevelForce.addLocal(simpleForce.mult(150f))
+				is CohesionState -> secondLevelForce.addLocal(simpleForce.mult(100f))
+				is EvadeState -> secondLevelForce.addLocal(simpleForce.mult(250f))
 				is FleeState -> secondLevelForce.addLocal(simpleForce.mult(150f))
-				is ObstacleAvoidState -> firstLevelForce.addLocal(simpleForce.mult(50f))
+				is ObstacleAvoidState -> firstLevelForce.addLocal(simpleForce.mult(100f))
 				is PursuitState -> secondLevelForce.addLocal(simpleForce.mult(150f))
 				is SeekState -> secondLevelForce.addLocal(simpleForce.mult(150f))
-				is SeparationState -> firstLevelForce.addLocal(simpleForce.mult(200f))
+				is SeparationState -> firstLevelForce.addLocal(simpleForce.mult(250f))
 				is WanderState -> secondLevelForce.addLocal(simpleForce.mult(50f))
 			}
 		}
