@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
 	lateinit var thread: Thread
 	lateinit var battleStart: Thread
 	lateinit var print: Thread
+	var selectedAverageVelocity=Vector2f(0f,0f)
 	var lstColor = Color.BLACK
 	var shown = false
 	override fun onDestroy() {
@@ -105,7 +106,13 @@ You only hit ${panel.bulletHit} of them
 								shown = true
 							}
 						} else {
+							val lstSelected=selected
 							selected = newList.minBy { it.location.distanceSquared(this@MainActivity.state.target) }!!
+							if(selected===lstSelected){
+								selectedAverageVelocity.addLocal(selected.velocity.mult(2f)).multLocal(0.33f)
+							}else{
+								selectedAverageVelocity=selected.velocity
+							}
 							lstColor = selected.color
 							selected.color = Color.RED
 							panel.invalidate()

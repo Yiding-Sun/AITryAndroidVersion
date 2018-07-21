@@ -158,7 +158,8 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 	enum class Weapon(val value: Int) {
 		GUN(0), MISSILE(1), RADIUS(2), SUPER_GUN(3);
 		
-		fun next(): Weapon = values()[ordinal + 1]
+		fun next(): Weapon = values()[if (ordinal + 1 <= values().size) ordinal + 1 else 0]
+		
 	}
 	
 	var weapon = Weapon.GUN
@@ -254,7 +255,7 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 					}
 					Weapon.RADIUS -> {
 						val bullet = GunBullet(activity)
-						bullet.velocity = activity.transport.velocity.add(activity.transport.velocity.normalize().mult(2000f))
+						bullet.velocity = activity.transport.velocity.add(activity.transport.velocity.normalize().mult(1000f))
 						transports.add(bullet)
 						val thread = object : Thread() {
 							override fun run() {
@@ -264,6 +265,32 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 								Thread.sleep(30)
 								cd = false
 								Thread.sleep(210)
+								bullet.dead = true
+							}
+						}
+						thread.start()
+					}
+					Weapon.SUPER_GUN -> {
+						val enemyLocation = activity.selected.location
+						val bulletVelocity = 500f
+						val toEnemy=enemyLocation.add(activity.transport.location.negate())
+						val angle=toEnemy.angleBetween(activity.selectedAverageVelocity)
+						val shootAngle=Math.asin(Math.sin(angle.toDouble())*activity.selectedAverageVelocity.length()/bulletVelocity)
+						val target=toEnemy.normalize().mult(bulletVelocity)
+						target.rotateAroundOrigin(shootAngle.toFloat(),false)
+						val bullet=GunBullet(activity)
+						bullet.velocity=target
+						bullet.color=Color.BLUE
+						bullet.size=4f
+						transports.add(bullet)
+						val thread = object : Thread() {
+							override fun run() {
+								cd = true
+								Thread.sleep(250)
+								bullet.touchable = true
+								Thread.sleep(113)
+								cd = false
+								Thread.sleep(4750)
 								bullet.dead = true
 							}
 						}

@@ -11,7 +11,7 @@ open class Transport(
 		var maxVelocity: Float = 50f,
 		var maxAcceleration: Float = 20f,
 		var color: Int = Color.BLACK,
-		val size: Float = 5f,
+		var size: Float = 5f,
 		var explode: Boolean = true
 ) {
 	var velocity = Vector2f(0.00001f, 0f)
