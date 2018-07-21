@@ -7,7 +7,7 @@ import java.lang.Math.sqrt
 
 open class Transport(
 		private val mass: Float,
-		val location: Vector2f,
+		var location: Vector2f,
 		var maxVelocity: Float = 50f,
 		var maxAcceleration: Float = 20f,
 		var color: Int = Color.BLACK,

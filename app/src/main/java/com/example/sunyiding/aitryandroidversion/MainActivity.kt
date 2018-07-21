@@ -14,16 +14,11 @@ import AlignmentState
 import CohesionState
 import EvadeState
 import WanderState
-import android.content.DialogInterface
+import PursuitState
 import android.content.pm.ActivityInfo
-import android.content.res.Configuration
-import android.support.constraint.ConstraintLayout
 import android.support.v7.app.AlertDialog
-import android.view.MotionEvent
-import android.view.View
-import android.view.Window
-import android.view.WindowManager
 import android.widget.LinearLayout
+import GunBullet
 
 class MainActivity : AppCompatActivity() {
 	
@@ -72,6 +67,46 @@ class MainActivity : AppCompatActivity() {
 			panel.transports.add(new)
 			newList.add(new)
 		}
+		val pursuitList = ArrayList(newList)
+		pursuitList.add(transport)
+		repeat(3){
+			val new = Transport(1f, Vector2f(3600f *Math.random().toFloat()-1200f,2400f*Math.random().toFloat()-800f),maxAcceleration = 100f,maxVelocity = 100f,color = Color.BLUE)
+			new.states.add(SeparationState(new,pursuitList))
+			new.states.add(ObstacleAvoidState(new, list))
+			new.states.add(PursuitState(new, transport))
+			val thread=Thread(Runnable {
+				while(!new.dead){
+					Thread.sleep((Math.random()*2000+333).toLong())
+					if(new.location.distanceSquared(transport.location)<1000000){
+						val enemyLocation = transport.location
+						val bulletVelocity = 500f
+						val toEnemy=enemyLocation.add(new.location.negate())
+						val angle=toEnemy.angleBetween(transport.velocity)
+						val shootAngle=Math.asin(Math.sin(angle.toDouble())*transport.velocity.length()/bulletVelocity)
+						val target=toEnemy.normalize().mult(bulletVelocity)
+						target.rotateAroundOrigin(shootAngle.toFloat(),false)
+						val bullet= GunBullet(this)
+						bullet.velocity=target
+						bullet.color=Color.BLUE
+						bullet.size=4f
+						bullet.location=Vector2f(new.location)
+						panel.transports.add(bullet)
+						val thread = object : Thread() {
+							override fun run() {
+								Thread.sleep(100)
+								bullet.touchable = true
+								Thread.sleep(4750)
+								bullet.dead = true
+							}
+						}
+						thread.start()
+					}
+				}
+			})
+			thread.start()
+			panel.transports.add(new)
+			pursuitList.add(new)
+		}
 		selected = newList[0]
 		lstColor = selected.color
 		thread = object : Thread() {
@@ -85,7 +120,7 @@ class MainActivity : AppCompatActivity() {
 							var i = 0
 							while (i < panel.transports.size) {
 								synchronized(panel.transports[i]) {
-									if (panel.transports[i].color == Color.GREEN) {
+									if (panel.transports[i].explode) {
 										newList.add(panel.transports[i])
 									}
 								}

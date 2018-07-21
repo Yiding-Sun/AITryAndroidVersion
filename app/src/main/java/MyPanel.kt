@@ -86,7 +86,8 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 			paint.color = Color.BLACK
 			lstUpdate = time
 			synchronized(transports) {
-				for (transport in transports) {
+				for (i in 0 until transports.size) {
+					val transport=transports[i]
 					if (start)
 						transport.update(tpf)
 					transport.draw(canvas, axis)
