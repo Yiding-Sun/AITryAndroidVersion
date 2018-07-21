@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
 		panel = MyPanel(this, list)
-		transport = Transport(1f, Vector2f(200f, 150f), maxAcceleration = 200f, maxVelocity = 150f, color = Color.BLACK)
+		transport = Transport(1f, Vector2f(200f, 150f), maxAcceleration = 250f, maxVelocity = 200f, color = Color.BLACK,explode = false)
 		state = ArriveState(transport, Vector2f(0f, 0f), SpeedLevel.MIDDLE)
 		newList = ArrayList<Transport>()
 		val layout = findViewById<LinearLayout>(R.id.main)
@@ -77,7 +77,7 @@ class MainActivity : AppCompatActivity() {
 			val thread=Thread(Runnable {
 				while(!new.dead){
 					Thread.sleep((Math.random()*2000+333).toLong())
-					if(new.location.distanceSquared(transport.location)<1000000){
+					if(new.location.distanceSquared(transport.location)<100000){
 						val enemyLocation = transport.location
 						val bulletVelocity = 500f
 						val toEnemy=enemyLocation.add(new.location.negate())
@@ -115,7 +115,7 @@ class MainActivity : AppCompatActivity() {
 				try {
 					while (!isInterrupted) {
 						selected.color = lstColor
-						synchronized(panel.transports) {
+						synchronized(pursuitList) {
 							newList = ArrayList()
 							var i = 0
 							while (i < panel.transports.size) {

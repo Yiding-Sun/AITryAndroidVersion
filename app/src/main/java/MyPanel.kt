@@ -159,7 +159,7 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 	enum class Weapon(val value: Int) {
 		GUN(0), MISSILE(1), RADIUS(2), SUPER_GUN(3);
 		
-		fun next(): Weapon = values()[if (ordinal + 1 <= values().size) ordinal + 1 else 0]
+		fun next(): Weapon = values()[if (ordinal + 2 <= values().size) ordinal + 1 else 0]
 		
 	}
 	
