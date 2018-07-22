@@ -209,12 +209,12 @@ You only hit ${panel.bulletHit} of them
 		false
 	})
 	
-	override fun onDestroy() {
+	/*override fun onDestroy() {
 		super.onDestroy()
 		thread.interrupt()
 		battleStart.interrupt()
 		print.interrupt()
-	}
+	}*/
 	
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)

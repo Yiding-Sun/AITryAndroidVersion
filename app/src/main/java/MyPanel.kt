@@ -47,12 +47,14 @@ fun explosion(panel: MyPanel) {
 	
 }
 
+data class Death(val location: Vector2f, val reason: String, val time: Long)
 class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(activity) {
 	var touchWall = 0
 	var touchEach = 0
 	var bulletHit = 0
 	var touchObstacle = 0
 	val transports = ArrayList<Transport>()
+	val deaths = ArrayList<Death>()
 	var lstUpdate = System.currentTimeMillis()
 	val axis = Vector2f(0f, 0f)
 	var a = false
@@ -90,7 +92,7 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 			lstUpdate = time
 			synchronized(transports) {
 				for (i in 0 until transports.size) {
-					val transport=transports[i]
+					val transport = transports[i]
 					if (start)
 						transport.update(tpf)
 					transport.draw(canvas, axis)
@@ -98,6 +100,7 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 						transport.dead = true
 						if (transport.explode) {
 							explosion(this)
+							deaths.add(Death(transport.location, "撞墙", System.currentTimeMillis() + 2000))
 							touchWall++
 						}
 					}
@@ -106,6 +109,7 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 							transport.dead = true
 							if (transport.explode) {
 								explosion(this)
+								deaths.add(Death(transport.location, "撞球", System.currentTimeMillis() + 2000))
 								touchObstacle++
 							}
 						}
@@ -124,8 +128,10 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 										explosion(this)
 									}
 									if (transports[i].explode && transports[j].explode) {
+										deaths.add(Death(transports[i].location, "互撞", System.currentTimeMillis() + 2000))
 										touchEach++
 									} else if (transports[i].explode || transports[j].explode) {
+										deaths.add(Death(transports[i].location, "射中", System.currentTimeMillis() + 2000))
 										bulletHit++
 									}
 								}
@@ -149,11 +155,24 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 					repeat(5) { explosion(this) }
 				}
 			}
-			paint.color=Color.BLACK
-			paint.textSize=50f
+			paint.color = Color.CYAN
+			paint.textSize = 20f
+			synchronized(deaths) {
+				var i = 0
+				println("deaths.size = ${deaths.size}")
+				while (i < deaths.size) {
+					canvas.drawText(deaths[i].reason, deaths[i].location.x+axis.x - 20f, deaths[i].location.y +axis.y- 10f, paint)
+					if (deaths[i].time < System.currentTimeMillis()) {
+						deaths.removeAt(i)
+					}
+					i++
+				}
+			}
+			paint.color = Color.BLACK
+			paint.textSize = 50f
 			canvas.drawText("Weapon : $weapon", 0f, 50f, paint)
 			canvas.drawText("Bullet : ${weapon.bulletLeft}", 0f, 100f, paint)
-			canvas.drawText("Left   : ${activity.size}",0f,150f,paint)
+			canvas.drawText("Left   : ${activity.size}", 0f, 150f, paint)
 			/*g.color= Color.GREEN
 			val v2=(transports[1].states[0] as PursuitState).seekTarget.add(axis)
 			g.drawOval(v2.x.toInt() - 2, v2.y.toInt() - 2, 4, 4)*/
@@ -166,7 +185,8 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 	
 	enum class Weapon(val value: Int) {
 		GUN(0), MISSILE(1), RADIUS(2), SUPER_GUN(3);
-		var bulletLeft=10
+		
+		var bulletLeft = 10
 		fun next(): Weapon = values()[if (ordinal + 2 <= values().size) ordinal + 1 else 0]
 	}
 	
@@ -215,7 +235,7 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 		}
 		if (event.pointerCount == 2) {
 			if (!cd) {
-				if(weapon.bulletLeft>0) {
+				if (weapon.bulletLeft > 0) {
 					when (weapon) {
 						Weapon.GUN -> {
 							val bullet = GunBullet(activity)
@@ -305,8 +325,8 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 						}
 					}
 					weapon.bulletLeft--
-					if(weapon.bulletLeft==0){
-						Toast.makeText(activity,"$weapon is out of bullet",Toast.LENGTH_SHORT).show()
+					if (weapon.bulletLeft == 0) {
+						Toast.makeText(activity, "$weapon is out of bullet", Toast.LENGTH_SHORT).show()
 					}
 				}
 			}
