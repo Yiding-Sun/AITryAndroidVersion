@@ -15,6 +15,7 @@
         <item>多(100)</item>
         <item>中(70)</item>
         <item>少(50)</item>
+        <item>无</item>
     </string-array>
     <string-array name="gun_num">
         <item>多(300)</item>

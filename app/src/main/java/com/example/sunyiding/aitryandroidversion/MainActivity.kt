@@ -22,6 +22,8 @@ import GunBullet
 import Settings
 import android.app.ActionBar
 import android.content.Intent
+import android.graphics.Canvas
+import android.graphics.Paint
 import android.os.Handler
 import android.view.LayoutInflater
 import android.view.View
@@ -78,7 +80,20 @@ class MainActivity : AppCompatActivity() {
 			val pursuitList = ArrayList(newList)
 			pursuitList.add(transport)
 			repeat(settings.enemyNum) {
-				val new = Transport(1f, Vector2f(3600f * Math.random().toFloat() - 1200f, 2400f * Math.random().toFloat() - 800f), maxAcceleration = 100f, maxVelocity = 100f, color = Color.BLUE)
+				val new = object : Transport(1f, Vector2f(3600f * Math.random().toFloat() - 1200f, 2400f * Math.random().toFloat() - 800f), maxAcceleration = 100f, maxVelocity = 100f, color = Color.BLUE) {
+					override fun draw(canvas: Canvas, axis: Vector2f) {
+						super.draw(canvas, axis)
+						val paint = Paint()
+						paint.color = color
+						val x = heading.normalize()
+						val y = Vector2f(-x.y, x.x)
+						val p1 = location.add(axis)
+						val p2 = x.negate().add(y).mult(size).add(location).add(axis)
+						val p3 = x.negate().add(y.negate()).mult(size).add(location).add(axis)
+						drawLine(p1, p2, canvas, paint)
+						drawLine(p1, p3, canvas, paint)
+					}
+				}
 				new.states.add(SeparationState(new, pursuitList))
 				new.states.add(ObstacleAvoidState(new, list))
 				new.states.add(PursuitState(new, transport))
@@ -116,7 +131,7 @@ class MainActivity : AppCompatActivity() {
 				panel.transports.add(new)
 				pursuitList.add(new)
 			}
-			selected = newList[0]
+			selected = pursuitList[0]
 			lstColor = selected.color
 			thread = object : Thread() {
 				override fun run() {
@@ -161,7 +176,7 @@ You only hit ${panel.bulletHit} of them
 								lstColor = selected.color
 								selected.color = Color.RED
 								panel.invalidate()
-								Thread.sleep(10)
+								Thread.sleep(15)
 							}
 						}
 					} catch (e: InterruptedException) {

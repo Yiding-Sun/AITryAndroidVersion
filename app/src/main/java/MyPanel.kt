@@ -57,11 +57,11 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 	val deaths = ArrayList<Death>()
 	var lstUpdate = System.currentTimeMillis()
 	val axis = Vector2f(0f, 0f)
-	var a = false
-	var d = false
-	var w = false
-	var s = false
 	var start = true
+	fun outOfSight(transport: Transport): Boolean {
+		val screenLocation = transport.location.add(axis)
+		return screenLocation.x < 0 || screenLocation.x > width || screenLocation.y < 0 || screenLocation.y > height
+	}
 	
 	@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 	override fun onDraw(canvas: Canvas?) {
@@ -69,20 +69,17 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 			val time = System.currentTimeMillis()
 			val tpf = time - lstUpdate
 			
-			if (a) axis.addLocal(Vector2f(tpf.toFloat(), 0f))
-			if (d) axis.addLocal(Vector2f(-tpf.toFloat(), 0f))
-			if (w) axis.addLocal(Vector2f(0f, tpf.toFloat()))
-			if (s) axis.addLocal(Vector2f(0f, -tpf.toFloat()))
-			
-			
+			//Repaint
 			val paint = Paint()
 			paint.color = Color.WHITE
 			canvas.drawRect(0f, 0f, canvas.width.toFloat(), canvas.height.toFloat(), paint)
+			//Draw obstacles
 			for (i in list) {
 				val location = i.location.add(axis)
 				paint.color = i.color
 				canvas.drawOval((location.x - i.radius), (location.y - i.radius), location.x + i.radius, location.y + i.radius, paint)
 			}
+			//Draw walls
 			paint.color = Color.GRAY
 			canvas.drawRect(-1200 + axis.x - 50, -800 + axis.y - 50, axis.x + 3700 - 1200 - 50, axis.y - 800, paint)
 			canvas.drawRect(-1200 + axis.x - 50, 1600 + axis.y, axis.x - 1200 - 50 + 3700, axis.y + 1650, paint)
@@ -90,6 +87,7 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 			canvas.drawRect(2400 + axis.x, -800 + axis.y - 50, axis.x + 2450, axis.y - 800 - 50 + 2500, paint)
 			paint.color = Color.BLACK
 			lstUpdate = time
+			//Draw and update transports
 			synchronized(transports) {
 				for (i in 0 until transports.size) {
 					val transport = transports[i]
@@ -116,6 +114,7 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 					}
 				}
 			}
+			//Check touching
 			synchronized(transports) {
 				for (i in 0 until transports.size) {
 					if (transports[i].touchable)
@@ -138,6 +137,7 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 						}
 				}
 			}
+			//Remove Death
 			var i = 0
 			while (i < transports.size) {
 				if (transports[i].dead) {
@@ -145,29 +145,32 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 				}
 				i++
 			}
+			//Draw target
 			if (transports[0].states[0] is ArriveState) {
 				paint.color = Color.RED
 				val v = (transports[0].states[0] as ArriveState).target.add(axis)
-				canvas.drawOval(v.x - 2, v.y - 2, v.x + 2, v.y + 2, paint)
+				canvas.drawOval(v.x - 3, v.y - 3, v.x + 3, v.y + 3, paint)
 			} else {
 				if (start) {
 					start = false
 					repeat(5) { explosion(this) }
 				}
 			}
+			//Draw death tips
 			paint.color = Color.CYAN
 			paint.textSize = 20f
 			synchronized(deaths) {
 				var i = 0
 				println("deaths.size = ${deaths.size}")
 				while (i < deaths.size) {
-					canvas.drawText(deaths[i].reason, deaths[i].location.x+axis.x - 20f, deaths[i].location.y +axis.y- 10f, paint)
+					canvas.drawText(deaths[i].reason, deaths[i].location.x + axis.x - 20f, deaths[i].location.y + axis.y - 10f, paint)
 					if (deaths[i].time < System.currentTimeMillis()) {
 						deaths.removeAt(i)
 					}
 					i++
 				}
 			}
+			//Draw tips
 			paint.color = Color.BLACK
 			paint.textSize = 50f
 			canvas.drawText("Weapon : $weapon", 0f, 50f, paint)
