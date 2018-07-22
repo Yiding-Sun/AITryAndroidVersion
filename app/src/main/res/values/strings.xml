@@ -1,4 +1,12 @@
 <resources>
     <string name="app_name">AITryAndroidVersion</string>
     <string name="exit">exit</string>
+    <string name="tip_difficulty_aim">蓝机瞄准难度：</string>
+    <string name="tip_difficulty_enemy_num">蓝机数量：</string>
+    <string name="target_num">绿机数量：</string>
+    <string name="gun_num">机枪子弹数量：</string>
+    <string name="missile_num">导弹数量：</string>
+    <string name="radius_num">轻机枪子弹数量：</string>
+    <string name="super_gun_num">自瞄枪子弹数量：</string>
+    <string name="finished">完成</string>
 </resources>

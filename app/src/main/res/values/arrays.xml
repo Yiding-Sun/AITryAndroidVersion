@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="difficulty_aim">
+        <item>简单</item>
+        <item>中等</item>
+        <item>困难</item>
+    </string-array>
+    <string-array name="enemy_num">
+        <item>多(10)</item>
+        <item>中(5)</item>
+        <item>少(3)</item>
+        <item>无</item>
+    </string-array>
+    <string-array name="target_num">
+        <item>多(100)</item>
+        <item>中(70)</item>
+        <item>少(50)</item>
+    </string-array>
+    <string-array name="gun_num">
+        <item>多(300)</item>
+        <item>中(200)</item>
+        <item>少(100)</item>
+    </string-array>
+    <string-array name="missile_num">
+        <item>多(100)</item>
+        <item>中(50)</item>
+        <item>少(30)</item>
+    </string-array>
+    <string-array name="radius_num">
+        <item>多(700)</item>
+        <item>中(500)</item>
+        <item>少(300)</item>
+    </string-array>
+    <string-array name="super_gun_num">
+        <item>多(100)</item>
+        <item>中(50)</item>
+        <item>少(30)</item>
+    </string-array>
+</resources>

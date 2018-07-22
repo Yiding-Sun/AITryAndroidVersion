@@ -1,0 +1,1 @@
+data class Settings(var enemyAim: Float, var enemyNum: Int,var targetNum:Int, var gunNum: Int, var missileNum: Int, var radiusNum: Int, var superGunNum: Int)

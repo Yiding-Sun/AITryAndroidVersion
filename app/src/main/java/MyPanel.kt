@@ -2,6 +2,8 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.os.Build
+import android.support.annotation.RequiresApi
 import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
@@ -59,6 +61,7 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 	var s = false
 	var start = true
 	
+	@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 	override fun onDraw(canvas: Canvas?) {
 		if (canvas != null) {
 			val time = System.currentTimeMillis()
@@ -146,6 +149,11 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 					repeat(5) { explosion(this) }
 				}
 			}
+			paint.color=Color.BLACK
+			paint.textSize=50f
+			canvas.drawText("Weapon : $weapon", 0f, 50f, paint)
+			canvas.drawText("Bullet : ${weapon.bulletLeft}", 0f, 100f, paint)
+			canvas.drawText("Left   : ${activity.size}",0f,150f,paint)
 			/*g.color= Color.GREEN
 			val v2=(transports[1].states[0] as PursuitState).seekTarget.add(axis)
 			g.drawOval(v2.x.toInt() - 2, v2.y.toInt() - 2, 4, 4)*/
@@ -158,9 +166,8 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 	
 	enum class Weapon(val value: Int) {
 		GUN(0), MISSILE(1), RADIUS(2), SUPER_GUN(3);
-		
+		var bulletLeft=10
 		fun next(): Weapon = values()[if (ordinal + 2 <= values().size) ordinal + 1 else 0]
-		
 	}
 	
 	var weapon = Weapon.GUN
@@ -183,7 +190,6 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 				}
 				if (event.pointerCount == 3) {
 					weapon = weapon.next()
-					Toast.makeText(activity, "Weapon changed, now:$weapon", Toast.LENGTH_SHORT).show()
 				}
 			}
 			MotionEvent.ACTION_MOVE -> {
@@ -209,96 +215,100 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 		}
 		if (event.pointerCount == 2) {
 			if (!cd) {
-				when (weapon) {
-					Weapon.GUN -> {
-						val bullet = GunBullet(activity)
-						bullet.velocity = activity.transport.velocity.add(activity.transport.velocity.normalize().mult(400f))
-						transports.add(bullet)
-						val thread = object : Thread() {
-							override fun run() {
-								cd = true
-								Thread.sleep(250)
-								bullet.touchable = true
-								cd = false
-								Thread.sleep(4750)
-								bullet.dead = true
+				if(weapon.bulletLeft>0) {
+					when (weapon) {
+						Weapon.GUN -> {
+							val bullet = GunBullet(activity)
+							bullet.velocity = activity.transport.velocity.add(activity.transport.velocity.normalize().mult(400f))
+							transports.add(bullet)
+							val thread = object : Thread() {
+								override fun run() {
+									cd = true
+									Thread.sleep(250)
+									bullet.touchable = true
+									cd = false
+									Thread.sleep(4750)
+									bullet.dead = true
+								}
 							}
+							thread.start()
 						}
-						thread.start()
+						
+						Weapon.MISSILE -> {
+							val bullet = Transport(1f, Vector2f(activity.transport.location), maxVelocity = 200f, maxAcceleration = 300f, color = Color.BLUE, size = 3f, explode = false)
+							bullet.touchable = false
+							bullet.velocity = Vector2f(activity.transport.velocity)
+							bullet.states.add(ObstacleAvoidState(bullet, list))
+							bullet.states.add(PursuitState(bullet, activity.selected))
+							bullet.states.add(object : State(bullet) {
+								override fun update(): Vector2f {
+									bullet.maxAcceleration = Math.max(bullet.maxAcceleration - 2f, 20f)
+									return Vector2f(0f, 0f)
+								}
+							})
+							activity.selected.states.add(EvadeState(activity.selected, bullet))
+							transports.add(bullet)
+							val thread = object : Thread() {
+								override fun run() {
+									cd = true
+									Thread.sleep(500)
+									bullet.touchable = true
+									Thread.sleep(500)
+									cd = false
+									Thread.sleep(9000)
+									bullet.dead = true
+								}
+							}
+							thread.start()
+						}
+						Weapon.RADIUS -> {
+							val bullet = GunBullet(activity)
+							bullet.velocity = activity.transport.velocity.add(activity.transport.velocity.normalize().mult(1500f))
+							transports.add(bullet)
+							val thread = object : Thread() {
+								override fun run() {
+									cd = true
+									bullet.touchable = true
+									Thread.sleep(30)
+									cd = false
+									Thread.sleep(210)
+									bullet.dead = true
+								}
+							}
+							thread.start()
+						}
+						Weapon.SUPER_GUN -> {
+							val enemyLocation = activity.selected.location
+							val bulletVelocity = 500f
+							val toEnemy = enemyLocation.add(activity.transport.location.negate())
+							val angle = toEnemy.angleBetween(activity.selectedAverageVelocity)
+							val shootAngle = Math.asin(Math.sin(angle.toDouble()) * activity.selectedAverageVelocity.length() / bulletVelocity)
+							val target = toEnemy.normalize().mult(bulletVelocity)
+							target.rotateAroundOrigin(shootAngle.toFloat(), false)
+							val bullet = GunBullet(activity)
+							bullet.velocity = target
+							bullet.color = Color.BLUE
+							bullet.size = 4f
+							transports.add(bullet)
+							val thread = object : Thread() {
+								override fun run() {
+									cd = true
+									Thread.sleep(250)
+									bullet.touchable = true
+									Thread.sleep(113)
+									cd = false
+									Thread.sleep(4750)
+									bullet.dead = true
+								}
+							}
+							thread.start()
+						}
 					}
-					
-					Weapon.MISSILE -> {
-						val bullet = Transport(1f, Vector2f(activity.transport.location), maxVelocity = 200f, maxAcceleration = 300f, color = Color.BLUE, size = 3f, explode = false)
-						bullet.touchable = false
-						bullet.velocity = Vector2f(activity.transport.velocity)
-						bullet.states.add(ObstacleAvoidState(bullet, list))
-						bullet.states.add(PursuitState(bullet, activity.selected))
-						bullet.states.add(object : State(bullet) {
-							override fun update(): Vector2f {
-								bullet.maxAcceleration = Math.max(bullet.maxAcceleration - 2f, 20f)
-								return Vector2f(0f, 0f)
-							}
-						})
-						activity.selected.states.add(EvadeState(activity.selected, bullet))
-						transports.add(bullet)
-						val thread = object : Thread() {
-							override fun run() {
-								cd = true
-								Thread.sleep(500)
-								bullet.touchable = true
-								Thread.sleep(500)
-								cd = false
-								Thread.sleep(9000)
-								bullet.dead = true
-							}
-						}
-						thread.start()
-					}
-					Weapon.RADIUS -> {
-						val bullet = GunBullet(activity)
-						bullet.velocity = activity.transport.velocity.add(activity.transport.velocity.normalize().mult(1000f))
-						transports.add(bullet)
-						val thread = object : Thread() {
-							override fun run() {
-								cd = true
-								Thread.sleep(10)
-								bullet.touchable = true
-								Thread.sleep(30)
-								cd = false
-								Thread.sleep(210)
-								bullet.dead = true
-							}
-						}
-						thread.start()
-					}
-					Weapon.SUPER_GUN -> {
-						val enemyLocation = activity.selected.location
-						val bulletVelocity = 500f
-						val toEnemy=enemyLocation.add(activity.transport.location.negate())
-						val angle=toEnemy.angleBetween(activity.selectedAverageVelocity)
-						val shootAngle=Math.asin(Math.sin(angle.toDouble())*activity.selectedAverageVelocity.length()/bulletVelocity)
-						val target=toEnemy.normalize().mult(bulletVelocity)
-						target.rotateAroundOrigin(shootAngle.toFloat(),false)
-						val bullet=GunBullet(activity)
-						bullet.velocity=target
-						bullet.color=Color.BLUE
-						bullet.size=4f
-						transports.add(bullet)
-						val thread = object : Thread() {
-							override fun run() {
-								cd = true
-								Thread.sleep(250)
-								bullet.touchable = true
-								Thread.sleep(113)
-								cd = false
-								Thread.sleep(4750)
-								bullet.dead = true
-							}
-						}
-						thread.start()
+					weapon.bulletLeft--
+					if(weapon.bulletLeft==0){
+						Toast.makeText(activity,"$weapon is out of bullet",Toast.LENGTH_SHORT).show()
 					}
 				}
-				
 			}
 		}
 		return true

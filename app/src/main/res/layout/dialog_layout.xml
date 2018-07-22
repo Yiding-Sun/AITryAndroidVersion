@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:id="@+id/dialog">
+
+    <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:id="@+id/tableLayout">
+
+            <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
+                <TextView
+                        android:text="@string/tip_difficulty_aim"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"/>
+                <Spinner
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent" android:id="@+id/aim"
+                        android:entries="@array/difficulty_aim"/>
+            </TableRow>
+            <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
+                <TextView
+                        android:text="@string/tip_difficulty_enemy_num"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"/>
+                <Spinner
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent" android:id="@+id/enemy_num"
+                        android:entries="@array/enemy_num"/>
+            </TableRow>
+            <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
+                <TextView
+                        android:text="@string/target_num"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"/>
+                <Spinner
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent" android:id="@+id/target_num"
+                        android:entries="@array/target_num"/>
+            </TableRow>
+            <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
+                <TextView
+                        android:text="@string/gun_num"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"/>
+                <Spinner
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent" android:id="@+id/gun_num"
+                        android:entries="@array/gun_num"/>
+            </TableRow>
+            <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
+                <TextView
+                        android:text="@string/missile_num"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"/>
+                <Spinner
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent" android:id="@+id/missile_num"
+                        android:entries="@array/missile_num"/>
+            </TableRow>
+            <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
+                <TextView
+                        android:text="@string/radius_num"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"/>
+                <Spinner
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent" android:id="@+id/radius_num"
+                        android:entries="@array/radius_num"/>
+            </TableRow>
+            <TableRow android:layout_width="match_parent" android:layout_height="match_parent"
+                      tools:layout_editor_absoluteX="240dp">
+                <TextView
+                        android:text="@string/super_gun_num"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"/>
+                <Spinner
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent" android:id="@+id/super_gun_num"
+                        android:entries="@array/super_gun_num"/>
+            </TableRow>
+        </TableLayout>
+        <Button
+                android:text="@string/finished"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" android:id="@+id/finished" android:layout_below="@+id/tableLayout"
+                android:layout_alignParentStart="true"/>
+    </RelativeLayout>
+</LinearLayout>

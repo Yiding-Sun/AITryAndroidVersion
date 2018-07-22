@@ -9,7 +9,7 @@ android {
     buildToolsVersion "28.0.1"
     defaultConfig {
         applicationId "com.example.sunyiding.aitryandroidversion"
-        minSdkVersion 23
+        minSdkVersion 16
         targetSdkVersion 26
         versionCode 1
         versionName "1.0"
