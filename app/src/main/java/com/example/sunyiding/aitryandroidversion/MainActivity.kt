@@ -20,35 +20,30 @@ import android.support.v7.app.AlertDialog
 import android.widget.LinearLayout
 import GunBullet
 import Settings
-import android.app.ActionBar
-import android.content.Intent
+import android.annotation.SuppressLint
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.os.Handler
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Spinner
-import android.widget.TextView
 
 class MainActivity : AppCompatActivity() {
 	
-	val list = makeObstacles()
-	val settings: Settings = Settings(1 / 9f, 10, 100, 500, 100, 2000, 200)
-	lateinit var panel: MyPanel
+	private val list = makeObstacles()
+	private val settings: Settings = Settings(1 / 9f, 10, 100, 500, 100, 2000, 200)
+	private lateinit var panel: MyPanel
 	lateinit var transport: Transport
 	lateinit var state: ArriveState
 	lateinit var newList: ArrayList<Transport>
 	lateinit var selected: Transport
-	lateinit var thread: Thread
-	lateinit var battleStart: Thread
-	lateinit var print: Thread
+	private lateinit var thread: Thread
+	private lateinit var battleStart: Thread
+	private lateinit var print: Thread
 	var selectedAverageVelocity = Vector2f(0f, 0f)
 	var lstColor = Color.BLACK
 	var shown = false
 	var size = 0
-	var handler = Handler(Handler.Callback {
+	private var handler = Handler(Handler.Callback {
 		if (it.what == 0) {
 			panel = MyPanel(this, list)
 			MyPanel.Weapon.GUN.bulletLeft = settings.gunNum
@@ -57,7 +52,7 @@ class MainActivity : AppCompatActivity() {
 			MyPanel.Weapon.SUPER_GUN.bulletLeft = settings.superGunNum
 			transport = Transport(1f, Vector2f(600f, 400f), maxAcceleration = 250f, maxVelocity = 200f, color = Color.BLACK, explode = false)
 			state = ArriveState(transport, Vector2f(600f, 400f), SpeedLevel.MIDDLE)
-			newList = ArrayList<Transport>()
+			newList = ArrayList()
 			val layout = findViewById<LinearLayout>(R.id.main)
 			println("layout.width = ${layout.width}")
 			println("layout.height = ${layout.height}")
@@ -161,7 +156,7 @@ ${panel.touchWall} of them hit the wall
 ${panel.touchObstacle} of them hit the wall
 ${panel.touchEach} of them hit each other and die
 You only hit ${panel.bulletHit} of them
-""").setPositiveButton(R.string.exit) { p0, p1 -> System.exit(0) }.create().show()
+""").setPositiveButton(R.string.exit) { _, _ -> System.exit(0) }.create().show()
 									}
 									shown = true
 								}
@@ -206,7 +201,7 @@ You only hit ${panel.bulletHit} of them
 						while (!isInterrupted) {
 							Thread.sleep(5000)
 							synchronized(System.out) {
-								println("panel = ${panel}")
+								println("panel = $panel")
 								println("touchWall = ${panel.touchWall}")
 								println("touchEach = ${panel.touchEach}")
 								println("touchObstacle = ${panel.touchObstacle}")
@@ -231,6 +226,7 @@ You only hit ${panel.bulletHit} of them
 		print.interrupt()
 	}*/
 	
+	@SuppressLint("InflateParams")
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
@@ -289,7 +285,7 @@ You only hit ${panel.bulletHit} of them
 	
 	override fun onResume() {
 		if (requestedOrientation != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-			requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE;
+			requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
 		}
 		super.onResume()
 	}

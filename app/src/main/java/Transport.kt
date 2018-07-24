@@ -15,7 +15,7 @@ open class Transport(
 		var explode: Boolean = true
 ) {
 	var velocity = Vector2f(0.00001f, 0f)
-	var acceleration = Vector2f(0f, 0f)
+	private var acceleration = Vector2f(0f, 0f)
 	var heading = Vector2f(1f, 0f)
 	val states = ArrayList<State>()
 	var dead = false
@@ -23,7 +23,6 @@ open class Transport(
 	fun update(tpf: Long) {
 		val firstLevelForce = Vector2f(0f, 0f)
 		val secondLevelForce = Vector2f(0f, 0f)
-		var force: Vector2f
 		for (state in states) {
 			val simpleForce = state.update()
 			when (state) {
@@ -39,7 +38,7 @@ open class Transport(
 				is WanderState -> secondLevelForce.addLocal(simpleForce.mult(50f))
 			}
 		}
-		force = if (firstLevelForce.length() > maxAcceleration) {
+		val force= if (firstLevelForce.length() > maxAcceleration) {
 			firstLevelForce.normalize().mult(maxAcceleration)
 		} else {
 			val l = firstLevelForce.length()
@@ -77,17 +76,3 @@ open class Transport(
 	}
 }
 
-fun Vector2f.toMax(max: Float): Vector2f {
-	val vector2f = Vector2f(this)
-	return if (vector2f.length() > max) {
-		vector2f.normalizeLocal().multLocal(max)
-	} else {
-		vector2f
-	}
-}
-
-fun Vector2f.toMaxLocal(max: Float): Vector2f {
-	return if (length() > max) {
-		normalizeLocal().multLocal(max)
-	} else this
-}
