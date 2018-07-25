@@ -161,7 +161,6 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 			paint.textSize = 20f
 			synchronized(deaths) {
 				var i = 0
-				println("deaths.size = ${deaths.size}")
 				while (i < deaths.size) {
 					canvas.drawText(deaths[i].reason, deaths[i].location.x + axis.x - 20f, deaths[i].location.y + axis.y - 10f, paint)
 					if (deaths[i].time < System.currentTimeMillis()) {
@@ -179,6 +178,7 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 			/*g.color= Color.GREEN
 			val v2=(transports[1].states[0] as PursuitState).seekTarget.add(axis)
 			g.drawOval(v2.x.toInt() - 2, v2.y.toInt() - 2, 4, 4)*/
+			showNear(canvas)
 		}
 	}
 	
@@ -335,6 +335,79 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 			}
 		}
 		return true
+	}
+	
+	@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+	/*private fun showNear(canvas: Canvas) {
+		synchronized(transports) {
+			val outside = transports.filter {
+				val local = it.location.add(axis)
+				local.x < 0 || local.x > width || local.y < 0 || local.y > height
+			}
+			if (outside.size == transports.size)
+				return
+			val upSide = ArrayList<Pair<Transport, Float>>()
+			val downSide = ArrayList<Pair<Transport, Float>>()
+			val leftSide = ArrayList<Pair<Transport, Float>>()
+			val rightSide = ArrayList<Pair<Transport, Float>>()
+			outside.forEach {
+				val local = it.location.add(axis)
+				val toLeft = 0 - local.x
+				val toRight = local.x - width
+				val toUp=0-local.y
+				val toDown = local.y - height
+				val array= arrayOf(toLeft,toRight,toUp,toDown)
+				val min=array.filter { it>0 }.min()
+				when (min) {
+					toLeft -> leftSide.add(Pair(it, min))
+					toRight -> rightSide.add(Pair(it, min))
+					toUp -> upSide.add(Pair(it,min))
+					toDown -> downSide.add(Pair(it,min))
+				}
+			}
+			if (transports.size == upSide.size + downSide.size + leftSide.size + rightSide.size)
+				return
+			val lowUp = upSide.minBy { it.second }
+			val lowDown = downSide.minBy { it.second }
+			val lowLeft = leftSide.minBy { it.second }
+			val lowRight = rightSide.minBy { it.second }
+			val low = arrayOf(lowUp, lowDown, lowLeft, lowRight).minBy { it?.second ?: 10000000f }
+			val relativeLocation = low!!.first.location + axis + Vector2f(width / 2f, height / 2f)
+			val target = when (low) {
+				lowUp -> {
+					val angle = relativeLocation.angleBetween(Vector2f(0f, 1f)).toDouble()
+					Vector2f(width / 2 + (height / 2) * Math.tan(angle).toFloat(), 0f)
+				}
+				lowDown -> {
+					val angle = relativeLocation.angleBetween(Vector2f(0f, -1f)).toDouble()
+					Vector2f(width / 2 + (height / 2) * Math.tan(angle).toFloat(), height.toFloat())
+				}
+				lowLeft -> {
+					val angle = relativeLocation.angleBetween(Vector2f(-1f, 0f)).toDouble()
+					Vector2f(0f, height / 2 + (width / 2) * Math.tan(angle).toFloat())
+				}
+				lowRight -> {
+					val angle = relativeLocation.angleBetween((Vector2f(1f, 0f))).toDouble()
+					Vector2f(width.toFloat(), height / 2 + (width / 2) * Math.tan(angle).toFloat())
+				}
+				else -> Vector2f(0f, 0f)
+			}
+			val paint = Paint()
+			paint.color = Color.RED
+			canvas.drawOval(target.x - 20f, target.y - 20f, target.x + 20f, target.y + 20f, paint)
+		}
+	}*/
+	private fun showNear(canvas: Canvas) {
+		val location = activity.selected.location+axis
+		if (!(location.x < 0 || location.x > width || location.y < 0 || location.y > height)) {
+			return
+		}
+		val direction = (activity.selected.location - activity.state.target).normalize()
+		val p1 = activity.state.target + axis + direction * 20f
+		val p2 = p1 + direction *(activity.selected.location.distance(activity.state.target)/20)
+		val paint = Paint()
+		paint.color = Color.BLUE
+		canvas.drawLine(p1.x, p1.y, p2.x, p2.y, paint)
 	}
 }
 
