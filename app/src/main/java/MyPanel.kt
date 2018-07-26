@@ -260,7 +260,7 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 						}
 						
 						Weapon.MISSILE -> {
-							val bullet = Transport(1f, Vector2f(activity.transport.location), maxVelocity = 200f, maxAcceleration = 300f, color = Color.BLUE, size = 3f, explode = false)
+							val bullet = Transport(1f, Vector2f(activity.transport.location), maxVelocity = 400f, maxAcceleration = 300f, color = Color.BLUE, size = 3f, explode = false)
 							bullet.touchable = false
 							bullet.velocity = Vector2f(activity.transport.velocity)
 							bullet.states.add(ObstacleAvoidState(bullet, list))
@@ -276,11 +276,11 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 							val thread = object : Thread() {
 								override fun run() {
 									cd = true
-									Thread.sleep(500)
+									Thread.sleep(700)
 									bullet.touchable = true
-									Thread.sleep(500)
+									Thread.sleep(300)
 									cd = false
-									Thread.sleep(9000)
+									Thread.sleep(7000)
 									bullet.dead = true
 								}
 							}

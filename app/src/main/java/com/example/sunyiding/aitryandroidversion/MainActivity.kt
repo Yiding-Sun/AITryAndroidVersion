@@ -163,7 +163,7 @@ class MainActivity : AppCompatActivity() {
 								lstColor = selected.color
 								selected.color = Color.RED
 								panel.invalidate()
-								Thread.sleep(15)
+								Thread.sleep(23)
 							}
 						}
 					} catch (e: InterruptedException) {
