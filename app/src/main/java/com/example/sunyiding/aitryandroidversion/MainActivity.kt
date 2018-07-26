@@ -149,16 +149,7 @@ class MainActivity : AppCompatActivity() {
 							size = newList.size
 							if (newList.isEmpty()) {
 								if (!shown) {
-									runOnUiThread {
-										AlertDialog.Builder(this@MainActivity, R.style.MyAlertDialogStyle).setTitle("Game Finished").setMessage("""
-You've killed all the enemy planes
-${panel.touchWall} of them hit the wall
-${panel.touchObstacle} of them hit the wall
-${panel.touchEach} of them hit each other and die
-You only hit ${panel.bulletHit} of them
-""").setPositiveButton(R.string.exit) { _, _ -> System.exit(0) }.create().show()
-									}
-									shown = true
+                                    showDialog(panel,this@MainActivity)
 								}
 							} else {
 								val lstSelected = selected
@@ -289,4 +280,16 @@ You only hit ${panel.bulletHit} of them
 		}
 		super.onResume()
 	}
+}
+fun showDialog(panel:MyPanel,activity: MainActivity){
+	activity.runOnUiThread {
+		AlertDialog.Builder(activity, R.style.MyAlertDialogStyle).setTitle(if(activity.transport.dead)"You Win" else "You lose").setMessage("""
+You've killed all the enemy planes
+${panel.touchWall} of them hit the wall
+${panel.touchObstacle} of them hit the wall
+${panel.touchEach} of them hit each other and die
+You only hit ${panel.bulletHit} of them
+""").setPositiveButton(R.string.exit) { _, _ -> System.exit(0) }.create().show()
+	}
+	activity.shown = true
 }

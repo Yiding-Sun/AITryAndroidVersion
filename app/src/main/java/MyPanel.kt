@@ -8,6 +8,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.Toast
 import com.example.sunyiding.aitryandroidversion.MainActivity
+import com.example.sunyiding.aitryandroidversion.showDialog
 import com.jme3.math.Vector2f
 
 
@@ -154,6 +155,7 @@ class MyPanel(val activity: MainActivity, val list: ArrayList<Obstacle>) : View(
 				if (start) {
 					start = false
 					repeat(5) { explosion(this) }
+					showDialog(this,activity)
 				}
 			}
 			//Draw death tips
