@@ -21,6 +21,7 @@ import android.widget.LinearLayout
 import GunBullet
 import Settings
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.os.Handler
@@ -94,7 +95,6 @@ class MainActivity : AppCompatActivity() {
 				new.states.add(PursuitState(new, transport))
 				val thread = Thread(Runnable {
 					while (!new.dead) {
-						Thread.sleep((Math.random() * 2000 + 333).toLong())
 						if (new.location.distanceSquared(transport.location) < 100000) {
 							val enemyLocation = transport.location
 							val bulletVelocity = 500f
@@ -120,6 +120,7 @@ class MainActivity : AppCompatActivity() {
 							}
 							thread.start()
 						}
+                        Thread.sleep((Math.random() * 2000 + 333).toLong())
 					}
 				})
 				thread.start()
@@ -218,60 +219,63 @@ class MainActivity : AppCompatActivity() {
 	}*/
 	
 	@SuppressLint("InflateParams")
-	override fun onCreate(savedInstanceState: Bundle?) {
+    public override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 		setContentView(R.layout.activity_main)
-		val dialogView = layoutInflater.inflate(R.layout.dialog_layout, null)
-		val dialog = AlertDialog.Builder(this).setTitle("Settings").setView(dialogView).create()
-		dialog.show()
-		dialogView.findViewById<Button>(R.id.finished).setOnClickListener {
-			settings.enemyAim = when (dialogView.findViewById<Spinner>(R.id.aim).selectedItemPosition) {
-				0 -> 1 / 6f
-				1 -> 1 / 9f
-				2 -> 0f
-				else -> 0f
-			}
-			settings.enemyNum = when (dialogView.findViewById<Spinner>(R.id.enemy_num).selectedItemPosition) {
-				0 -> 10
-				1 -> 5
-				2 -> 3
-				3 -> 0
-				else -> 0
-			}
-			settings.targetNum = when (dialogView.findViewById<Spinner>(R.id.target_num).selectedItemPosition) {
-				0 -> 100
-				1 -> 70
-				2 -> 50
-				else -> 0
-			}
-			settings.gunNum = when (dialogView.findViewById<Spinner>(R.id.gun_num).selectedItemPosition) {
-				0 -> 300
-				1 -> 200
-				2 -> 100
-				else -> 0
-			}
-			settings.missileNum = when (dialogView.findViewById<Spinner>(R.id.missile_num).selectedItemPosition) {
-				0 -> 100
-				1 -> 50
-				2 -> 30
-				else -> 0
-			}
-			settings.radiusNum = when (dialogView.findViewById<Spinner>(R.id.radius_num).selectedItemPosition) {
-				0 -> 700
-				1 -> 500
-				2 -> 300
-				else -> 0
-			}
-			settings.superGunNum = when (dialogView.findViewById<Spinner>(R.id.super_gun_num).selectedItemPosition) {
-				0 -> 100
-				1 -> 50
-				2 -> 30
-				else -> 0
-			}
-			handler.sendEmptyMessage(0)
-			dialog.dismiss()
-		}
+        create()
 	}
+    fun create(){
+        val dialogView = layoutInflater.inflate(R.layout.dialog_layout, null)
+        val dialog = AlertDialog.Builder(this).setTitle("Settings").setView(dialogView).create()
+        dialog.show()
+        dialogView.findViewById<Button>(R.id.finished).setOnClickListener {
+            settings.enemyAim = when (dialogView.findViewById<Spinner>(R.id.aim).selectedItemPosition) {
+                0 -> 1 / 6f
+                1 -> 1 / 9f
+                2 -> 0f
+                else -> 0f
+            }
+            settings.enemyNum = when (dialogView.findViewById<Spinner>(R.id.enemy_num).selectedItemPosition) {
+                0 -> 10
+                1 -> 5
+                2 -> 3
+                3 -> 0
+                else -> 0
+            }
+            settings.targetNum = when (dialogView.findViewById<Spinner>(R.id.target_num).selectedItemPosition) {
+                0 -> 100
+                1 -> 70
+                2 -> 50
+                else -> 0
+            }
+            settings.gunNum = when (dialogView.findViewById<Spinner>(R.id.gun_num).selectedItemPosition) {
+                0 -> 300
+                1 -> 200
+                2 -> 100
+                else -> 0
+            }
+            settings.missileNum = when (dialogView.findViewById<Spinner>(R.id.missile_num).selectedItemPosition) {
+                0 -> 100
+                1 -> 50
+                2 -> 30
+                else -> 0
+            }
+            settings.radiusNum = when (dialogView.findViewById<Spinner>(R.id.radius_num).selectedItemPosition) {
+                0 -> 700
+                1 -> 500
+                2 -> 300
+                else -> 0
+            }
+            settings.superGunNum = when (dialogView.findViewById<Spinner>(R.id.super_gun_num).selectedItemPosition) {
+                0 -> 100
+                1 -> 50
+                2 -> 30
+                else -> 0
+            }
+            handler.sendEmptyMessage(0)
+            dialog.dismiss()
+        }
+    }
 	
 	
 	override fun onResume() {
@@ -289,7 +293,11 @@ ${panel.touchWall} of them hit the wall
 ${panel.touchObstacle} of them hit the wall
 ${panel.touchEach} of them hit each other and die
 You only hit ${panel.bulletHit} of them
-""").setPositiveButton(R.string.exit) { _, _ -> System.exit(0) }.create().show()
+""").setPositiveButton(R.string.exit) { _, _ -> System.exit(0) }.setNegativeButton(R.string.restart) { _,_ ->
+            val intent=Intent(activity,activity.javaClass)
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            activity.startActivity(intent)
+        }.create().show()
 	}
 	activity.shown = true
 }

@@ -9,4 +9,5 @@
     <string name="radius_num">轻机枪子弹数量：</string>
     <string name="super_gun_num">自瞄枪子弹数量：</string>
     <string name="finished">完成</string>
+    <string name="restart">RESTART</string>
 </resources>
